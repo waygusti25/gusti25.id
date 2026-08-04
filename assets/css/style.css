@@ -11,7 +11,7 @@
 
   --text-main: #F8FAFC;
   --text-muted: #94A3B8;
-  --text-soft: #E7EAF0; /* fixed replacement for opacity-based dimming */
+  --text-soft: #E7EAF0;
 
   --glass-bg: rgba(15, 23, 42, 0.55);
   --glass-border: rgba(255, 255, 255, 0.08);
@@ -39,11 +39,11 @@ body {
   align-items: center;
   justify-content: center;
   overflow-x: hidden;
-  overflow-y: auto; /* was `hidden` — no longer clips content at high zoom/text-size */
+  overflow-y: auto;
   position: relative;
 }
 
-/* Ambient glow orb */
+/* ---------- Ambient glow orb: organic multi-stage drift ---------- */
 .ambient-orb {
   position: absolute;
   width: clamp(320px, 45vw, 600px);
@@ -52,14 +52,18 @@ body {
   border-radius: 50%;
   filter: blur(var(--orb-blur));
   z-index: 0;
-  animation: pulse 8s infinite alternate var(--ease);
+  animation: drift 26s var(--ease) infinite;
   will-change: transform, opacity;
   pointer-events: none;
 }
 
-@keyframes pulse {
-  0%   { transform: scale(1) translate(0, 0); opacity: 0.8; }
-  100% { transform: scale(1.1) translate(20px, -20px); opacity: 1; }
+@keyframes drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1);       opacity: 0.85; }
+  22%  { transform: translate3d(26px, -34px, 0) scale(1.06); opacity: 0.95; }
+  46%  { transform: translate3d(-18px, -58px, 0) scale(0.97); opacity: 1; }
+  68%  { transform: translate3d(-40px, 12px, 0) scale(1.04); opacity: 0.9; }
+  86%  { transform: translate3d(14px, 40px, 0) scale(0.98);  opacity: 0.95; }
+  100% { transform: translate3d(0, 0, 0) scale(1);       opacity: 0.85; }
 }
 
 .gateway-container {
@@ -70,8 +74,11 @@ body {
   padding: clamp(1rem, 4vw, 2rem);
 }
 
-/* Glassmorphism Panel */
+/* ---------- Glassmorphism panel ---------- */
 .glass-panel {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
@@ -82,9 +89,68 @@ body {
   box-shadow: var(--shadow-panel);
 }
 
-/* Solid fallback for browsers without backdrop-filter support */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass-panel { background: rgba(8, 12, 20, 0.92); }
+}
+
+/* Real content always sits above the decorative glow layers */
+.glass-panel .logo-mark,
+.glass-panel .welcome-text {
+  position: relative;
+  z-index: 2;
+}
+
+/* ---------- Interactive glass spotlight ---------- */
+/* Default state + touch fallback: a static, gently breathing glow */
+.glass-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  background: radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.14), transparent 55%);
+  opacity: 0.55;
+  pointer-events: none;
+  animation: glow-breathe 7s ease-in-out infinite;
+  transition: opacity 0.4s var(--ease);
+}
+
+@keyframes glow-breathe {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 0.6; }
+}
+
+/* Enhanced state: a real layer moved with transform, driven by JS on fine pointers only */
+.spotlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 320px;
+  height: 320px;
+  margin: -160px 0 0 -160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.2), transparent 70%);
+  transform: translate3d(var(--spot-x, 30%), var(--spot-y, 20%), 0);
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+  will-change: transform, opacity;
+  transition: opacity 0.4s var(--ease);
+}
+
+.glass-panel.has-pointer-tracking::before { opacity: 0; animation: none; }
+.glass-panel.has-pointer-tracking .spotlight { opacity: 1; }
+
+/* ---------- Staggered load choreography + accent pulses ---------- */
+@keyframes revealUp {
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes accentPulse {
+  0%, 100% { opacity: 1;    transform: scale(1); }
+  50%      { opacity: 0.88; transform: scale(1.015); }
 }
 
 .logo-mark {
@@ -93,9 +159,14 @@ body {
   letter-spacing: 2px;
   margin-bottom: clamp(2rem, 5vw, 3rem);
   color: var(--text-muted);
+  animation: revealUp 0.7s var(--ease) 0.05s both;
 }
 
-.logo-mark span { color: var(--accent); }
+.logo-mark span {
+  display: inline-block;
+  color: var(--accent);
+  animation: accentPulse 4.5s ease-in-out 1.6s infinite;
+}
 
 .title {
   font-size: clamp(1.5rem, 1.1rem + 2.2vw, 2.25rem);
@@ -103,17 +174,19 @@ body {
   line-height: 1.4;
   margin-bottom: 1rem;
   letter-spacing: -0.02em;
+  animation: revealUp 0.7s var(--ease) 0.20s both;
 }
 
 .title .highlight {
   font-weight: 800;
-  color: var(--accent); /* fallback if background-clip: text isn't supported */
+  color: var(--accent);
   background: linear-gradient(135deg, var(--accent-soft), var(--accent));
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   display: block;
   margin-top: 0.5rem;
+  animation: accentPulse 5.5s ease-in-out 1.4s infinite;
 }
 
 .role {
@@ -122,6 +195,7 @@ body {
   color: var(--text-muted);
   letter-spacing: 0.05em;
   margin-bottom: 2.5rem;
+  animation: revealUp 0.7s var(--ease) 0.35s both;
 }
 
 .divider {
@@ -129,6 +203,7 @@ body {
   width: 60px;
   background: var(--glass-border);
   margin: 0 auto 2.5rem;
+  animation: revealUp 0.6s var(--ease) 0.50s both;
 }
 
 .bio {
@@ -136,21 +211,39 @@ body {
   font-weight: 400;
   font-style: italic;
   color: var(--text-soft);
+  animation: revealUp 0.7s var(--ease) 0.62s both;
 }
 
-/* Respect OS-level motion preference */
+/* ---------- Performance & accessibility guardrails ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .ambient-orb { animation: none; }
+  .ambient-orb,
+  .logo-mark,
+  .title,
+  .role,
+  .divider,
+  .bio,
+  .title .highlight,
+  .logo-mark span,
+  .glass-panel::before {
+    animation: none !important;
+  }
+
+  .logo-mark,
+  .title,
+  .role,
+  .divider,
+  .bio {
+    opacity: 1;
+    transform: none;
+  }
 }
 
-/* Defensive focus style for whenever links/buttons are added */
 a:focus-visible,
 button:focus-visible {
   outline: var(--focus-ring);
   outline-offset: 3px;
 }
 
-/* Ease GPU load on small/likely-lower-powered devices */
 @media (max-width: 420px) {
   .ambient-orb { filter: blur(40px); }
 }
