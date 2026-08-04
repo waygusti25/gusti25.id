@@ -1,41 +1,64 @@
 :root {
+  /* ============================================================
+     Theme: Warm Obsidian / Amber — luxury, high-tech gateway
+     ============================================================ */
   --bg-dark: #080C14;
-  --glow-core: rgba(245, 158, 11, 0.4); /* Warm Amber */
-  --glow-edge: rgba(252, 211, 77, 0.1); /* Champagne */
+
+  --glow-core: rgba(245, 158, 11, 0.4);  /* Warm Amber */
+  --glow-edge: rgba(252, 211, 77, 0.1);  /* Champagne */
+  --accent: #F59E0B;
+  --accent-soft: #FDE68A;
+
   --text-main: #F8FAFC;
   --text-muted: #94A3B8;
-  --glass-bg: rgba(15, 23, 42, 0.4);
+  --text-soft: #E7EAF0; /* fixed replacement for opacity-based dimming */
+
+  --glass-bg: rgba(15, 23, 42, 0.55);
   --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: 24px;
+  --orb-blur: 60px;
+
+  --radius-panel: 24px;
+  --shadow-panel: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --focus-ring: 2px solid #FDE68A;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { overflow-x: hidden; }
 
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
   background-color: var(--bg-dark);
   color: var(--text-main);
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto; /* was `hidden` — no longer clips content at high zoom/text-size */
   position: relative;
 }
 
-/* The Warm Glow Orb */
+/* Ambient glow orb */
 .ambient-orb {
   position: absolute;
-  width: 600px;
-  height: 600px;
+  width: clamp(320px, 45vw, 600px);
+  height: clamp(320px, 45vw, 600px);
   background: radial-gradient(circle, var(--glow-core) 0%, var(--glow-edge) 50%, transparent 70%);
   border-radius: 50%;
-  filter: blur(60px);
+  filter: blur(var(--orb-blur));
   z-index: 0;
-  animation: pulse 8s infinite alternate ease-in-out;
+  animation: pulse 8s infinite alternate var(--ease);
+  will-change: transform, opacity;
+  pointer-events: none;
 }
 
 @keyframes pulse {
-  0% { transform: scale(1) translate(0, 0); opacity: 0.8; }
+  0%   { transform: scale(1) translate(0, 0); opacity: 0.8; }
   100% { transform: scale(1.1) translate(20px, -20px); opacity: 1; }
 }
 
@@ -44,35 +67,38 @@ body {
   z-index: 10;
   width: 100%;
   max-width: 800px;
-  padding: 2rem;
+  padding: clamp(1rem, 4vw, 2rem);
 }
 
 /* Glassmorphism Panel */
 .glass-panel {
   background: var(--glass-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
-  border-radius: 24px;
-  padding: 4rem 3rem;
+  border-radius: var(--radius-panel);
+  padding: clamp(2.5rem, 6vw, 4rem) clamp(1.5rem, 5vw, 3rem);
   text-align: center;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-panel);
+}
+
+/* Solid fallback for browsers without backdrop-filter support */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-panel { background: rgba(8, 12, 20, 0.92); }
 }
 
 .logo-mark {
-  font-size: 1.5rem;
+  font-size: clamp(1.15rem, 1rem + 0.5vw, 1.5rem);
   font-weight: 800;
   letter-spacing: 2px;
-  margin-bottom: 3rem;
+  margin-bottom: clamp(2rem, 5vw, 3rem);
   color: var(--text-muted);
 }
 
-.logo-mark span {
-  color: #F59E0B; /* Amber accent */
-}
+.logo-mark span { color: var(--accent); }
 
 .title {
-  font-size: 2.25rem;
+  font-size: clamp(1.5rem, 1.1rem + 2.2vw, 2.25rem);
   font-weight: 300;
   line-height: 1.4;
   margin-bottom: 1rem;
@@ -81,7 +107,9 @@ body {
 
 .title .highlight {
   font-weight: 800;
-  background: linear-gradient(135deg, #FDE68A, #F59E0B);
+  color: var(--accent); /* fallback if background-clip: text isn't supported */
+  background: linear-gradient(135deg, var(--accent-soft), var(--accent));
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   display: block;
@@ -89,8 +117,8 @@ body {
 }
 
 .role {
-  font-family: monospace;
-  font-size: 1rem;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: clamp(0.85rem, 0.78rem + 0.35vw, 1rem);
   color: var(--text-muted);
   letter-spacing: 0.05em;
   margin-bottom: 2.5rem;
@@ -104,15 +132,25 @@ body {
 }
 
 .bio {
-  font-size: 1.25rem;
+  font-size: clamp(1rem, 0.92rem + 0.4vw, 1.25rem);
   font-weight: 400;
   font-style: italic;
-  color: var(--text-main);
-  opacity: 0.9;
+  color: var(--text-soft);
 }
 
-@media (max-width: 768px) {
-  .title { font-size: 1.75rem; }
-  .glass-panel { padding: 3rem 1.5rem; }
-  .ambient-orb { width: 400px; height: 400px; }
+/* Respect OS-level motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .ambient-orb { animation: none; }
+}
+
+/* Defensive focus style for whenever links/buttons are added */
+a:focus-visible,
+button:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+}
+
+/* Ease GPU load on small/likely-lower-powered devices */
+@media (max-width: 420px) {
+  .ambient-orb { filter: blur(40px); }
 }
