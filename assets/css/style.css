@@ -1,222 +1,118 @@
-/* ==========================================================================
-   Design Tokens & System Variables
-   ========================================================================== */
 :root {
-  /* Colors */
-  --bg-main: #0f172a;          
-  --bg-surface: #1e293b;       
-  --border-color: #334155;     
-  
-  --text-primary: #f8fafc;     
-  --text-secondary: #94a3b8;   
-  --text-muted: #64748b;       
-
-  --brand-primary: #6366f1;    
-  --brand-hover: #4f46e5;      
-  --brand-accent: #0ea5e9;     
-  
-  --font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  --transition: all 0.3s ease;
+  --bg-dark: #080C14;
+  --glow-core: rgba(245, 158, 11, 0.4); /* Warm Amber */
+  --glow-edge: rgba(252, 211, 77, 0.1); /* Champagne */
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --glass-bg: rgba(15, 23, 42, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.08);
 }
 
-/* Base Styles */
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
 body {
-  font-family: var(--font-family);
-  background-color: var(--bg-main);
-  color: var(--text-primary);
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-}
-a { color: inherit; text-decoration: none; }
-.container { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
-.text-center { text-align: center; }
-
-/* ==========================================================================
-   Navigation Bar
-   ========================================================================== */
-.navbar {
-  background-color: rgba(15, 23, 42, 0.9);
-  backdrop-filter: blur(12px);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  border-bottom: 1px solid var(--border-color);
-  padding: 1rem 0;
-}
-.nav-container { display: flex; justify-content: space-between; align-items: center; }
-.brand-logo { font-size: 1.35rem; font-weight: 700; }
-.brand-logo span { color: var(--brand-accent); }
-.nav-links { display: flex; align-items: center; gap: 1.5rem; font-size: 0.95rem; font-weight: 500;}
-.nav-links a { color: var(--text-secondary); transition: var(--transition); }
-.nav-links a:hover, .nav-links a.active { color: var(--text-primary); }
-
-.btn-secondary {
-  background-color: var(--bg-surface);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  transition: var(--transition);
-}
-.btn-secondary:hover { background-color: var(--border-color); }
-
-/* ==========================================================================
-   Notice Board (Pengumuman)
-   ========================================================================== */
-.notice-board {
-  background: linear-gradient(90deg, rgba(99, 102, 241, 0.1), rgba(14, 165, 233, 0.1));
-  border-bottom: 1px solid var(--border-color);
-  padding: 0.75rem 0;
-}
-.notice-content {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  min-height: 100vh;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  font-size: 0.9rem;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
 }
-.notice-badge {
-  background-color: var(--brand-primary);
-  color: white;
-  padding: 0.2rem 0.75rem;
-  border-radius: 20px;
-  font-weight: 700;
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
-.notice-text { color: var(--text-primary); }
 
-/* ==========================================================================
-   Hero / Identity Section
-   ========================================================================== */
-.hero {
-  padding: 5rem 0 4rem;
-  background: radial-gradient(circle at center top, rgba(99, 102, 241, 0.15), transparent 60%);
+/* The Warm Glow Orb */
+.ambient-orb {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, var(--glow-core) 0%, var(--glow-edge) 50%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(60px);
+  z-index: 0;
+  animation: pulse 8s infinite alternate ease-in-out;
 }
-.playful-welcome {
-  font-size: 3rem;
+
+@keyframes pulse {
+  0% { transform: scale(1) translate(0, 0); opacity: 0.8; }
+  100% { transform: scale(1.1) translate(20px, -20px); opacity: 1; }
+}
+
+.gateway-container {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 800px;
+  padding: 2rem;
+}
+
+/* Glassmorphism Panel */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 4rem 3rem;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.logo-mark {
+  font-size: 1.5rem;
   font-weight: 800;
-  margin-bottom: 0.5rem;
-  letter-spacing: -0.03em;
+  letter-spacing: 2px;
+  margin-bottom: 3rem;
+  color: var(--text-muted);
 }
-.name-title {
-  font-size: 2rem;
-  font-weight: 700;
+
+.logo-mark span {
+  color: #F59E0B; /* Amber accent */
+}
+
+.title {
+  font-size: 2.25rem;
+  font-weight: 300;
+  line-height: 1.4;
   margin-bottom: 1rem;
+  letter-spacing: -0.02em;
 }
-.gradient-text {
-  background: linear-gradient(135deg, #6366f1, #0ea5e9);
+
+.title .highlight {
+  font-weight: 800;
+  background: linear-gradient(135deg, #FDE68A, #F59E0B);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  display: block;
+  margin-top: 0.5rem;
 }
-.role-title {
-  font-size: 1.15rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 0.5rem;
-}
-.bio-text {
-  font-size: 1.1rem;
+
+.role {
+  font-family: monospace;
+  font-size: 1rem;
   color: var(--text-muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 2.5rem;
+}
+
+.divider {
+  height: 1px;
+  width: 60px;
+  background: var(--glass-border);
+  margin: 0 auto 2.5rem;
+}
+
+.bio {
+  font-size: 1.25rem;
+  font-weight: 400;
   font-style: italic;
-  max-width: 600px;
-  margin: 0 auto;
+  color: var(--text-main);
+  opacity: 0.9;
 }
 
-/* ==========================================================================
-   Academic Hub (Semester Grid)
-   ========================================================================== */
-.section { padding: 4rem 0; }
-.section-header { margin-bottom: 3rem; }
-.section-header h2 { font-size: 2rem; margin-bottom: 0.5rem; }
-.section-header p { color: var(--text-secondary); }
-
-.semester-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-}
-
-.semester-card {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  border-radius: 24px;
-  padding: 3rem 2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  transition: var(--transition);
-  position: relative;
-  overflow: hidden;
-}
-
-.semester-card::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 6px;
-}
-
-.card-ganjil::before { background: linear-gradient(90deg, #f59e0b, #ef4444); }
-.card-genap::before { background: linear-gradient(90deg, #10b981, #3b82f6); }
-
-.semester-card:hover {
-  transform: translateY(-5px);
-  border-color: var(--text-muted);
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
-}
-
-.card-icon {
-  font-size: 4rem;
-  margin-bottom: 1.5rem;
-}
-
-.card-content h3 {
-  font-size: 1.75rem;
-  margin-bottom: 0.25rem;
-}
-
-.card-content .subtitle {
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 1rem;
-  font-size: 0.95rem;
-}
-
-.card-content .description {
-  color: var(--text-muted);
-  margin-bottom: 2rem;
-  font-size: 0.95rem;
-}
-
-.enter-link {
-  font-weight: 700;
-  color: var(--brand-accent);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.semester-card:hover .enter-link {
-  color: var(--text-primary);
-}
-
-/* ==========================================================================
-   Footer
-   ========================================================================== */
-.footer {
-  padding: 3rem 0;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  border-top: 1px solid var(--border-color);
-}
-.footer-note { margin-top: 0.5rem; font-size: 0.8rem; }
-
-/* Responsive Adjustments */
 @media (max-width: 768px) {
-  .semester-grid { grid-template-columns: 1fr; }
-  .playful-welcome { font-size: 2.25rem; }
-  .notice-content { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  .title { font-size: 1.75rem; }
+  .glass-panel { padding: 3rem 1.5rem; }
+  .ambient-orb { width: 400px; height: 400px; }
 }
