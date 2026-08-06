@@ -14,12 +14,21 @@
 </head>
 <body>
 
-  <!-- Ambient Background Glow (Warm Amber) -->
+  <!-- Ambient background layers (decorative, behind the panel) -->
+  <div class="hud-grid" aria-hidden="true"></div>
   <div class="ambient-orb" aria-hidden="true"></div>
+  <div class="energy-core" aria-hidden="true"></div>
+  <div class="energy-sweep" aria-hidden="true"></div>
 
   <!-- Main Content Container -->
   <main class="gateway-container">
     <div class="glass-panel">
+      <span class="corner corner-tl" aria-hidden="true"></span>
+      <span class="corner corner-tr" aria-hidden="true"></span>
+      <span class="corner corner-bl" aria-hidden="true"></span>
+      <span class="corner corner-br" aria-hidden="true"></span>
+      <div class="scanline" aria-hidden="true"></div>
+
       <!-- Decorative glow: static breathing glow by default, upgraded to
            cursor-tracking by the script below on fine-pointer (non-touch) devices -->
       <div class="spotlight" aria-hidden="true"></div>
@@ -27,7 +36,10 @@
       <div class="logo-mark">G<span>25</span></div>
 
       <div class="welcome-text">
-        <h1 class="title">Welcome to the Digital Space of<br><span class="highlight">A. Gusti Efendy</span></h1>
+        <h1 class="title" aria-label="Welcome to the Digital Space of A. Gusti Efendy">
+          <span id="kineticLine1" class="kinetic-line">Welcome to the Digital Space of</span><br>
+          <span class="highlight">A. Gusti Efendy</span>
+        </h1>
         <p class="role">Young Lecturer &amp; Asisten Ahli @ Tadulako University</p>
 
         <div class="divider"></div>
@@ -41,12 +53,36 @@
 
   <script>
   (function () {
+    // Kinetic word-cascade for the first title line.
+    // Accessibility: aria-label on the <h1> carries the plain sentence;
+    // the generated word spans are aria-hidden so screen readers read the
+    // label once, not the fragmented visual pieces.
+    var line1 = document.getElementById('kineticLine1');
+    if (line1) {
+      var text = line1.textContent.trim();
+      var words = text.split(/\s+/);
+      line1.textContent = '';
+      words.forEach(function (word, i) {
+        var span = document.createElement('span');
+        span.className = 'kword';
+        span.style.setProperty('--i', i);
+        span.textContent = word;
+        span.setAttribute('aria-hidden', 'true');
+        line1.appendChild(span);
+        if (i < words.length - 1) {
+          line1.appendChild(document.createTextNode('\u00A0'));
+        }
+      });
+    }
+
+    // Cursor-tracking spotlight — fine pointers only. Touch devices keep
+    // the CSS-only static breathing glow, no JS cost at all for them.
     var panel = document.querySelector('.glass-panel');
     var spot = document.querySelector('.spotlight');
     if (!panel || !spot) return;
 
     var canTrack = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-    if (!canTrack) return; // touch / coarse pointer: keep the CSS-only static glow
+    if (!canTrack) return;
 
     panel.classList.add('has-pointer-tracking');
 
@@ -61,7 +97,8 @@
       var y = e.clientY - r.top;
       if (raf) cancelAnimationFrame(raf);
       raf = requestAnimationFrame(function () {
-        spot.style.setProperty('--spot-x', x + 'px');
+        spot.style.
+          setProperty('--spot-x', x + 'px');
         spot.style.setProperty('--spot-y', y + 'px');
       });
     });
