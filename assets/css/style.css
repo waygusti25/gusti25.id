@@ -8,6 +8,7 @@
   --glow-edge: rgba(252, 211, 77, 0.1);  /* Champagne */
   --accent: #F59E0B;
   --accent-soft: #FDE68A;
+  --accent-rgb: 245, 158, 11;
 
   --text-main: #F8FAFC;
   --text-muted: #94A3B8;
@@ -43,7 +44,25 @@ body {
   position: relative;
 }
 
-/* ---------- Ambient glow orb: organic multi-stage drift ---------- */
+/* ============================================================
+   Background layer 1: static HUD grid (no animation — it's the
+   calm, always-on backdrop the moving layers play against)
+   ============================================================ */
+.hud-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(0deg,  rgba(var(--accent-rgb), 0.05) 0, rgba(var(--accent-rgb), 0.05) 1px, transparent 1px, transparent 64px),
+    repeating-linear-gradient(90deg, rgba(var(--accent-rgb), 0.05) 0, rgba(var(--accent-rgb), 0.05) 1px, transparent 1px, transparent 64px);
+  -webkit-mask-image: radial-gradient(circle at 50% 45%, black 0%, transparent 72%);
+          mask-image: radial-gradient(circle at 50% 45%, black 0%, transparent 72%);
+}
+
+/* ============================================================
+   Background layer 2: the original slow ambient wash (kept as-is)
+   ============================================================ */
 .ambient-orb {
   position: absolute;
   width: clamp(320px, 45vw, 600px);
@@ -51,19 +70,66 @@ body {
   background: radial-gradient(circle, var(--glow-core) 0%, var(--glow-edge) 50%, transparent 70%);
   border-radius: 50%;
   filter: blur(var(--orb-blur));
-  z-index: 0;
+  z-index: 1;
   animation: drift 26s var(--ease) infinite;
   will-change: transform, opacity;
   pointer-events: none;
 }
 
 @keyframes drift {
-  0%   { transform: translate3d(0, 0, 0) scale(1);       opacity: 0.85; }
+  0%   { transform: translate3d(0, 0, 0) scale(1);          opacity: 0.85; }
   22%  { transform: translate3d(26px, -34px, 0) scale(1.06); opacity: 0.95; }
   46%  { transform: translate3d(-18px, -58px, 0) scale(0.97); opacity: 1; }
   68%  { transform: translate3d(-40px, 12px, 0) scale(1.04); opacity: 0.9; }
   86%  { transform: translate3d(14px, 40px, 0) scale(0.98);  opacity: 0.95; }
-  100% { transform: translate3d(0, 0, 0) scale(1);       opacity: 0.85; }
+  100% { transform: translate3d(0, 0, 0) scale(1);          opacity: 0.85; }
+}
+
+/* ============================================================
+   Background layer 3: reactive pulsing core — a faster, tighter
+   "reactor" pulse layered on top of the slow drift above
+   ============================================================ */
+.energy-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(140px, 18vw, 240px);
+  height: clamp(140px, 18vw, 240px);
+  background: radial-gradient(circle, rgba(var(--accent-rgb), 0.55) 0%, rgba(var(--accent-rgb), 0.15) 45%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(24px);
+  z-index: 1;
+  animation: corePulse 2.6s ease-in-out infinite;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+@keyframes corePulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1);    opacity: 0.65; }
+  50%      { transform: translate(-50%, -50%) scale(1.18); opacity: 1; }
+}
+
+/* ============================================================
+   Background layer 4: an intermittent diagonal "radar" sweep —mostly invisible, flashes briefly once per long cycle
+   ============================================================ */
+.energy-sweep {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 140vmax;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb), 0.55), transparent);
+  z-index: 1;
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: energySweep 9s ease-in-out infinite;
+}
+
+@keyframes energySweep {
+  0%   { transform: translate(-50%, -50%) rotate(24deg) translateX(-60vw); opacity: 0; }
+  5%   { opacity: 0.65; }
+  13%  { opacity: 0; }
+  100% { transform: translate(-50%, -50%) rotate(24deg) translateX(60vw);  opacity: 0; }
 }
 
 .gateway-container {
@@ -74,7 +140,9 @@ body {
   padding: clamp(1rem, 4vw, 2rem);
 }
 
-/* ---------- Glassmorphism panel ---------- */
+/* ============================================================
+   Glassmorphism panel
+   ============================================================ */
 .glass-panel {
   position: relative;
   overflow: hidden;
@@ -93,15 +161,14 @@ body {
   .glass-panel { background: rgba(8, 12, 20, 0.92); }
 }
 
-/* Real content always sits above the decorative glow layers */
+/* Real content always sits above the decorative glow/HUD layers */
 .glass-panel .logo-mark,
 .glass-panel .welcome-text {
   position: relative;
   z-index: 2;
 }
 
-/* ---------- Interactive glass spotlight ---------- */
-/* Default state + touch fallback: a static, gently breathing glow */
+/* ---------- Static breathing glow (touch/no-JS baseline) ---------- */
 .glass-panel::before {
   content: "";
   position: absolute;
@@ -120,16 +187,16 @@ body {
   50%      { opacity: 0.6; }
 }
 
-/* Enhanced state: a real layer moved with transform, driven by JS on fine pointers only */
+/* ---------- Cursor-tracking spotlight (mouse-driven, fine pointers only) ---------- */
 .spotlight {
   position: absolute;
   top: 0;
   left: 0;
-  width: 320px;
-  height: 320px;
-  margin: -160px 0 0 -160px;
+  width: 340px;
+  height: 340px;
+  margin: -170px 0 0 -170px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.2), transparent 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.22), transparent 70%);
   transform: translate3d(var(--spot-x, 30%), var(--spot-y, 20%), 0);
   opacity: 0;
   z-index: 1;
@@ -142,30 +209,84 @@ body {
 .glass-panel.has-pointer-tracking::before { opacity: 0; animation: none; }
 .glass-panel.has-pointer-tracking .spotlight { opacity: 1; }
 
-/* ---------- Staggered load choreography + accent pulses ---------- */
-@keyframes revealUp {
-  from { opacity: 0; transform: translate3d(0, 14px, 0); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+/* ---------- High-tech corner accents (always dimly visible, brighten on hover) ---------- */
+.corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--accent);
+  opacity: 0.45;
+  z-index: 3;
+  pointer-events: none;
+  transition: opacity 0.35s var(--ease), transform 0.35s var(--ease);
+}
+.corner-tl { top: 10px; left: 10px;    border-right: none; border-bottom: none; border-radius: 6px 0 0 0; }
+.corner-tr { top: 10px; right: 10px;   border-left: none;  border-bottom: none; border-radius: 0 6px 0 0; }
+.corner-bl { bottom: 10px; left: 10px; border-right: none; border-top: none;    border-radius: 0 0 0 6px; }
+.corner-br { bottom: 10px; right: 10px;border-left: none;  border-top: none;    border-radius: 0 0 6px 0; }
+
+.glass-panel:hover .corner {
+  opacity: 0.9;
+  transform: scale(1.15);
 }
 
-@keyframes accentPulse {
-  0%, 100% { opacity: 1;    transform: scale(1); }
-  50%      { opacity: 0.88; transform: scale(1.015); }
+/* ---------- Electric border glow-halo on hover (pure opacity, no filter animation) ---------- */
+.glass-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  border-radius: inherit;
+  box-shadow: 0 0 0 1px rgba(var(--accent-rgb), 0.55), 0 0 32px 6px rgba(var(--accent-rgb), 0.22);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s var(--ease);
+}
+.glass-panel:hover::after { opacity: 1; }
+
+/* ---------- Scanline pass on hover (defined always, only "played" on hover —
+   animation-play-state keeps this at zero cost while idle) ---------- */
+.scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -10%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-soft), var(--accent), var(--accent-soft), transparent);
+  opacity: 0;
+  z-index: 3;
+  pointer-events: none;
+  animation: scanSweep 1.6s linear infinite;
+  animation-play-state: paused;
+  transition: opacity 0.25s var(--ease);
+}
+.glass-panel:hover .scanline {
+  opacity: 0.85;
+  animation-play-state: running;
+}
+@keyframes scanSweep {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(700px); }
 }
 
+/* ============================================================
+   Kinetic text entrance
+   ============================================================ */
 .logo-mark {
   font-size: clamp(1.15rem, 1rem + 0.5vw, 1.5rem);
   font-weight: 800;
   letter-spacing: 2px;
   margin-bottom: clamp(2rem, 5vw, 3rem);
   color: var(--text-muted);
-  animation: revealUp 0.7s var(--ease) 0.05s both;
+  opacity: 0;
+  animation: revealUp 0.5s var(--ease) 0.05s both;
 }
 
 .logo-mark span {
   display: inline-block;
   color: var(--accent);
-  animation: accentPulse 4.5s ease-in-out 1.6s infinite;
+  opacity: 0;
+  animation: poweron 0.5s steps(1, end) 0.15s both, neonFlicker 6s ease-in-out 0.7s infinite;
 }
 
 .title {
@@ -174,19 +295,83 @@ body {
   line-height: 1.4;
   margin-bottom: 1rem;
   letter-spacing: -0.02em;
-  animation: revealUp 0.7s var(--ease) 0.20s both;
 }
 
+/* Each word of line 1 cascades in with a quick glitch-settle */
+.kword {
+  display: inline-block;
+  opacity: 0;
+  animation: kineticIn 0.45s var(--ease) both;
+  animation-delay: calc(var(--i) * 70ms + 0.3s);
+  will-change: transform, opacity;
+}
+
+@keyframes kineticIn {
+  0%   { opacity: 0; transform: translate3d(0,0,0) skewX(-14deg) scaleX(1.3); }
+  20%  { opacity: 1; transform: translate3d(-3px,0,0) skewX(7deg); }
+  40%  { opacity: 0.35; transform: translate3d(3px,0,0) skewX(-5deg); }
+  60%  { opacity: 1; transform: translate3d(-1px,0,0) skewX(2deg); }
+  100% { opacity: 1; transform: translate3d(0,0,0) skewX(0deg) scaleX(1); }
+}
+
+/* The gradient name "slams" into place as one unit — kept as a single
+   element (not split into letters) so the background-clip gradient trick
+   doesn't break across child spans */
 .title .highlight {
   font-weight: 800;
-  color: var(--accent);
+  color: var(--accent); /* fallback if background-clip: text isn't supported */
   background: linear-gradient(135deg, var(--accent-soft), var(--accent));
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   display: block;
   margin-top: 0.5rem;
-  animation: accentPulse 5.5s ease-in-out 1.4s infinite;
+  opacity: 0;
+  animation: nameSlam 0.6s var(--ease) 1.05s both, neonFlicker 6s ease-in-out 1.75s infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes nameSlam {
+  0%   { opacity: 0;   transform: translate3d(0,0,0) scaleX(1.5) skewX(-12deg); }
+  15%  { opacity: 1;   transform: translate3d(-4px,0,0) scaleX(0.94) skewX(6deg); }
+  30%  { opacity: 0.4; transform: translate3d(4px,0,0) scaleX(1.05) skewX(-4deg); }
+  50%  { opacity: 1;   transform: translate3d(-2px,0,0) skewX(2deg); }
+  70%  { opacity: 0.7; transform: translate3d(2px,0,0) skewX(-1deg); }
+  100% { opacity: 1;   transform: translate3d(0,0,0) scaleX(1) skewX(0deg); }
+}
+
+/* Neon terminal flicker — long calm stretches punctuated by quick stutters,
+   opacity-only so it's essentially free to run indefinitely */
+@keyframes neonFlicker {
+  0%, 100% { opacity: 1; }
+  4%  { opacity: 0.85; }
+  6%  { opacity: 1; }
+  46% { opacity: 1; }
+  48% { opacity: 0.6; }
+  50% { opacity: 1; }
+  51% { opacity: 0.75; }
+  53% { opacity: 1; }
+  92% { opacity: 1; }
+  94% { opacity: 0.88; }
+  96% { opacity: 1; }
+}
+
+@keyframes poweron {
+  0%   { opacity: 0; }
+  8%   { opacity: 1; }
+  10%  { opacity: 0.2; }
+  14%  { opacity: 1; }
+  16%  { opacity: 0.3; }
+  20%  { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+/* ============================================================
+   Calmer supporting elements — same staggered reveal as before, just retimed to settle after the title/logo entrance finishes
+   ============================================================ */
+@keyframes revealUp {
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 .role {
@@ -195,7 +380,8 @@ body {
   color: var(--text-muted);
   letter-spacing: 0.05em;
   margin-bottom: 2.5rem;
-  animation: revealUp 0.7s var(--ease) 0.35s both;
+  opacity: 0;
+  animation: revealUp 0.6s var(--ease) 1.35s both;
 }
 
 .divider {
@@ -203,7 +389,8 @@ body {
   width: 60px;
   background: var(--glass-border);
   margin: 0 auto 2.5rem;
-  animation: revealUp 0.6s var(--ease) 0.50s both;
+  opacity: 0;
+  animation: revealUp 0.5s var(--ease) 1.5s both;
 }
 
 .bio {
@@ -211,31 +398,44 @@ body {
   font-weight: 400;
   font-style: italic;
   color: var(--text-soft);
-  animation: revealUp 0.7s var(--ease) 0.62s both;
+  opacity: 0;
+  animation: revealUp 0.6s var(--ease) 1.65s both;
 }
 
-/* ---------- Performance & accessibility guardrails ---------- */
+/* ============================================================
+   Performance & accessibility guardrails
+   ============================================================ */
 @media (prefers-reduced-motion: reduce) {
   .ambient-orb,
+  .energy-core,
+  .energy-sweep,
   .logo-mark,
-  .title,
+  .logo-mark span,
+  .kword,
+  .title .highlight,
   .role,
   .divider,
   .bio,
-  .title .highlight,
-  .logo-mark span,
-  .glass-panel::before {
+  .glass-panel::before,
+  .scanline {
     animation: none !important;
   }
 
+  /* Force every entrance-animated element to its final, fully visible
+     state — reduced motion must never leave content invisible */
   .logo-mark,
-  .title,
+  .logo-mark span,
+  .kword,
+  .title .highlight,
   .role,
   .divider,
   .bio {
-    opacity: 1;
-    transform: none;
+    opacity: 1 !important;
+    transform: none !important;
   }
+
+  .energy-sweep { opacity: 0 !important; }
+  .scanline { opacity: 0 !important; }
 }
 
 a:focus-visible,
@@ -245,5 +445,6 @@ button:focus-visible {
 }
 
 @media (max-width: 420px) {
-  .ambient-orb { filter: blur(40px); }
+  .ambient-orb  { filter: blur(40px); }
+  .energy-core  { filter: blur(18px); }
 }
